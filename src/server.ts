@@ -4,6 +4,7 @@ config()
 import express from "express";
 import cors from "cors";
 import connectDB from "./config/db.js";
+import authRoutes from "./routes/authRoutes.js";
 
 connectDB()
 
@@ -19,11 +20,7 @@ app.use(cors({
 app.use(express.json())
 
 //Routes
-
-
-
-
-
+app.use("/api/auth",authRoutes)
 
 
 const port = process.env.PORT || 3000
