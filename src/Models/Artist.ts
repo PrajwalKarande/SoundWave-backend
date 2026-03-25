@@ -5,7 +5,6 @@ export interface IArtist{
     bio:string
     profileImage:string
     songs:Types.ObjectId[]
-    albums:Types.ObjectId[]
     createdAt:Date
 }
 
@@ -15,7 +14,6 @@ export const artistSchema = new Schema<IArtist>({
     bio:{type:String,required:true},
     profileImage:{type:String,required:true},
     songs:{type:[{type:Types.ObjectId,ref:"Song"}],default:[]},
-    albums:{type:[{type:Types.ObjectId,ref:"Album"}],default:[]},
     createdAt:{type:Date,default:Date.now}
 })
 

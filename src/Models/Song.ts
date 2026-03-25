@@ -3,10 +3,11 @@ import { model, Schema, Types } from "mongoose"
 export interface ISong{
     title:string
     url:string
+    r2Key:string
+    coverImage:string
     artist:Types.ObjectId[]
-    album:Types.ObjectId
     genre:string[]
-    duration:number
+    duration?:number
     createdAt:Date
 }
 
@@ -14,10 +15,11 @@ export interface ISong{
 export const songSchema = new Schema<ISong>({
     title:{type:String,required:true},
     url:{type:String,required:true},
+    r2Key:{type:String,required:true},
+    coverImage:{type:String,default:""},
     artist:{type:[{type:Types.ObjectId,ref:"Artist"}],required:true},
-    album:{type:Types.ObjectId,ref:"Album",required:true},
     genre:{type:[{type:String}],required:true},
-    duration:{type:Number,required:true},
+    duration:{type:Number},
     createdAt:{type:Date,default:Date.now}
 })
 
