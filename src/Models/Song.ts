@@ -23,4 +23,8 @@ export const songSchema = new Schema<ISong>({
     createdAt:{type:Date,default:Date.now}
 })
 
+// Indexes for fast read operations
+songSchema.index({ title: "text" })       // text search on title
+songSchema.index({ genre: 1 })            // filter by genre
+
 export const Song = model<ISong>("Song",songSchema)

@@ -3,7 +3,7 @@ import { model, Schema, Types } from "mongoose";
 export interface IArtist{
     name:string
     bio:string
-    profileImage:string
+    profileImageURL:string
     songs:Types.ObjectId[]
     createdAt:Date
 }
@@ -12,9 +12,12 @@ export interface IArtist{
 export const artistSchema = new Schema<IArtist>({
     name:{type:String,required:true},
     bio:{type:String,required:true},
-    profileImage:{type:String,required:true},
+    profileImageURL:{type:String,required:true},
     songs:{type:[{type:Types.ObjectId,ref:"Song"}],default:[]},
     createdAt:{type:Date,default:Date.now}
 })
+
+// Indexes for fast read operations
+artistSchema.index({ name: "text" })      // text search on name
 
 export const Artist = model<IArtist>("Artist",artistSchema)

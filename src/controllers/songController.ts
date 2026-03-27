@@ -70,6 +70,12 @@ export const uploadSong = async (req: AuthRequest, res: Response): Promise<void>
             })
         );
 
+        const existingSong = await Song.findOne({title});
+        if(existingSong){
+            res.status(400).json({message:"Song already exists"});
+            return;
+        }
+
         const song = await Song.create({
             title,
             url: audioUrl,
@@ -116,6 +122,28 @@ export const getSongById = async (req: AuthRequest, res: Response): Promise<void
     } catch (error) {
         console.error("Get song error:", error)
         res.status(500).json({ message: "Failed to fetch song" })
+    }
+}
+
+export const searchSongsByTitle = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const query = req.query.q as string
+
+        if (!query || query.trim().length === 0) {
+            res.status(400).json({ message: "Search query is required" })
+            return
+        }
+
+        const songs = await Song.find({
+            title: { $regex: query, $options: "i" },
+        })
+            .populate("artist", "name profileImage")
+            .limit(20)
+
+        res.status(200).json(songs)
+    } catch (error) {
+        console.error("Search songs error:", error)
+        res.status(500).json({ message: "Failed to search songs" })
     }
 }
 

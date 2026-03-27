@@ -6,6 +6,7 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import songRoutes from "./routes/songRoutes.js";
+import artistRoutes from "./routes/artistRoutes.js";
 
 connectDB()
 
@@ -23,6 +24,7 @@ app.use(express.json())
 //Routes
 app.use("/api/auth",authRoutes)
 app.use("/api/songs",songRoutes)
+app.use("/api/artists",artistRoutes)
 
 
 const port = process.env.PORT || 3000
