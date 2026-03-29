@@ -7,6 +7,8 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import songRoutes from "./routes/songRoutes.js";
 import artistRoutes from "./routes/artistRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import statRoutes from "./routes/statRoutes.js";
 
 connectDB()
 
@@ -25,6 +27,8 @@ app.use(express.json())
 app.use("/api/auth",authRoutes)
 app.use("/api/songs",songRoutes)
 app.use("/api/artists",artistRoutes)
+app.use("/api/users",userRoutes)
+app.use("/api/stats",statRoutes)
 
 
 const port = process.env.PORT || 3000

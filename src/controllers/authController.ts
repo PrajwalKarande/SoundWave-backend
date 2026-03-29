@@ -1,21 +1,13 @@
 import type { Request, Response } from "express"
-import { userLoginSchema, userRegisterSchema } from "../validators/schemas.js"
 import bcrypt from "bcrypt"
 import { User } from "../Models/User.js"
 import { generateToken } from "../Utils/jwt.js"
 import type { AuthRequest } from "../middleware/auth.js"
 
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
-    const validRequest = userRegisterSchema.safeParse(req.body)
-
-    if (!validRequest.success) {
-        res.status(400).json({ error: validRequest.error.issues })
-        return
-    }
-    const { username, email, password } = validRequest.data
+    const { username, email, password } = req.body
 
     try {
-
         const existingUser = await User.findOne({ email })
         if (existingUser) {
             res.status(400).json({ message: "User Already exists, Please login" })
@@ -46,46 +38,37 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     }
 }
 
-
 export const login = async (req: Request, res: Response): Promise<void> => {
-    const validRequest = userLoginSchema.safeParse(req.body)
+    const { email, password } = req.body
 
-    if(!validRequest.success){
-        res.status(400).json({ error: validRequest.error.issues })
-        return
-    }
-    const { email, password } = validRequest.data
-    
     try {
-        const user = await User.findOne({email})
-        if(!user){
+        const user = await User.findOne({ email })
+        if (!user) {
             console.log("User not found")
-            res.status(401).json({message:"Invalid Credentials"})
+            res.status(401).json({ message: "Invalid Credentials" })
             return
         }
 
-        const isPasswordValid = await bcrypt.compare(password,user.password)
-        if(!isPasswordValid){
-            res.status(401).json({message:"Invalid Credentials"})
+        const isPasswordValid = await bcrypt.compare(password, user.password)
+        if (!isPasswordValid) {
+            res.status(401).json({ message: "Invalid Credentials" })
             return
         }
 
-        const token = generateToken(user._id.toString(),user.role)
+        const token = generateToken(user._id.toString(), user.role)
 
         res.status(200).json({
-            message:"Login successful",
+            message: "Login successful",
             token,
-            user:{
-                username:user.username,
-                email:user.email,
-                role:user.role
+            user: {
+                username: user.username,
+                email: user.email,
+                role: user.role
             }
         })
-
-
-    }catch (error) {
+    } catch (error) {
         console.error("Login error:", error)
-        res.status(500).json({ error,message: "Server error, please try after some time" })
+        res.status(500).json({ error, message: "Server error, please try after some time" })
     }
 }
 
