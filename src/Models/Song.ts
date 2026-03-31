@@ -15,12 +15,12 @@ export interface ISong{
 export const songSchema = new Schema<ISong>({
     title:{type:String,required:true},
     url:{type:String,required:true},
-    r2Key:{type:String,required:true},
+    r2Key:{type:String,required:true,select:false},
     coverImage:{type:String,default:""},
     artist:{type:[{type:Types.ObjectId,ref:"Artist"}],required:true},
     genre:{type:[{type:String}],required:true},
     duration:{type:Number},
-    createdAt:{type:Date,default:Date.now}
+    createdAt:{type:Date,default:Date.now,select:false}
 })
 
 // Indexes for fast read operations

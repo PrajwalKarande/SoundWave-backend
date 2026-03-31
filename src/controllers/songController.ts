@@ -99,7 +99,7 @@ export const uploadSong = async (req: AuthRequest, res: Response): Promise<void>
 export const getAllSongs = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const songs = await Song.find()
-            .populate("artist", "name profileImage")
+            .populate("artist", "name profileImage").select('-__v')
 
         res.status(200).json(songs)
     } catch (error) {
@@ -138,7 +138,7 @@ export const searchSongsByTitle = async (req: AuthRequest, res: Response): Promi
             title: { $regex: query, $options: "i" },
         })
             .populate("artist", "name profileImage")
-            .limit(20)
+            .limit(20).select('-__v')
 
         res.status(200).json(songs)
     } catch (error) {

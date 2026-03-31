@@ -28,7 +28,7 @@ export const createArtist = async (req: AuthRequest, res: Response) => {
 
 export const getAllArtists = async (req: AuthRequest, res: Response) => {
     try {
-        const artists = await Artist.find();
+        const artists = await Artist.find().select('-__v');
         res.status(200).json(artists);
     } catch (error) {
         console.error("Error getting artists:", error);
@@ -38,7 +38,7 @@ export const getAllArtists = async (req: AuthRequest, res: Response) => {
 
 export const getArtistById = async (req: AuthRequest, res: Response) => {
     try {
-        const artist = await Artist.findById(req.params.id);
+        const artist = await Artist.findById(req.params.id).select('-__v');
         if (!artist) {
             res.status(404).json({ message: "Artist not found" });
             return;
@@ -62,7 +62,7 @@ export const searchArtistsByName = async (req: AuthRequest, res: Response): Prom
         const artists = await Artist.find({
             name: { $regex: query, $options: "i" },
         })
-            .limit(20)
+            .limit(20).select('-__v')
 
         res.status(200).json(artists)
     } catch (error) {

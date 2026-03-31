@@ -8,7 +8,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     const { username, email, password } = req.body
 
     try {
-        const existingUser = await User.findOne({ email })
+        const existingUser = await User.findOne({ email }).select('-__v')
         if (existingUser) {
             res.status(400).json({ message: "User Already exists, Please login" })
             return
@@ -42,7 +42,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body
 
     try {
-        const user = await User.findOne({ email })
+        const user = await User.findOne({ email }).select('-__v')
         if (!user) {
             console.log("User not found")
             res.status(401).json({ message: "Invalid Credentials" })

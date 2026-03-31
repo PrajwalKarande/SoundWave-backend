@@ -16,7 +16,7 @@ export const playlistSchema = new Schema<IPlaylist>({
     songs:{type:[{type:Types.ObjectId,ref:"Song"}],default:[]},
     user:{type:Types.ObjectId,ref:"User",required:true},
     isPublic:{type:Boolean,default:false},
-    createdAt:{type:Date,default:Date.now}
+    createdAt:{type:Date,default:Date.now,select:false}
 })
 
 export const Playlist = model<IPlaylist>("Playlist",playlistSchema)

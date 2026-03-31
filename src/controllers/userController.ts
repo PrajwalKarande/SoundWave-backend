@@ -5,7 +5,7 @@ import { User } from "../Models/User.js";
 
 export const getAllUsers = async(req:AuthRequest,res:Response):Promise<void>=>{
     try {
-        const users = await User.find()
+        const users = await User.find().select('-__v')
         res.status(200).json({ users })
     } catch (error) {
         res.status(500).json({ message: "Server error, please try after some time" })

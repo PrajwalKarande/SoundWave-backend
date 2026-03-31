@@ -14,7 +14,7 @@ export const artistSchema = new Schema<IArtist>({
     bio:{type:String,required:true},
     profileImageURL:{type:String,required:true},
     songs:{type:[{type:Types.ObjectId,ref:"Song"}],default:[]},
-    createdAt:{type:Date,default:Date.now}
+    createdAt:{type:Date,default:Date.now,select:false}
 })
 
 // Indexes for fast read operations

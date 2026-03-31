@@ -27,5 +27,5 @@ export const songUploadSchema = z.object({
 export const artistCreateSchema = z.object({
     name: z.string().min(1, "Name is required"),
     bio: z.string().min(1, "Bio is required"),
-    profileImageURL: z.url("Profile image must be a valid URL"),
+    profileImageURL: z.string("Profile image must be a valid URL"),
 })
