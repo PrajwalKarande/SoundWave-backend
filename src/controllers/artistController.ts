@@ -28,8 +28,22 @@ export const createArtist = async (req: AuthRequest, res: Response) => {
 
 export const getAllArtists = async (req: AuthRequest, res: Response) => {
     try {
-        const artists = await Artist.find().select('-__v');
-        res.status(200).json(artists);
+        const limit = Math.min(parseInt(req.query.limit as string) || 20, 100)
+        const cursor = req.query.cursor as string | undefined
+
+        const query = cursor ? { _id: { $gt: cursor } } : {}
+
+        const artists = await Artist.find(query)
+            .sort({ _id: 1 })
+            .limit(limit + 1)
+            .select('-__v')
+
+        const hasMore = artists.length > limit
+        if (hasMore) artists.pop()
+
+        const nextCursor = hasMore && artists.length > 0 ? artists[artists.length - 1]!._id.toString() : null
+
+        res.status(200).json({ data: artists, nextCursor, hasMore })
     } catch (error) {
         console.error("Error getting artists:", error);
         res.status(500).json({ message: "Failed to get artists", error });
@@ -52,19 +66,30 @@ export const getArtistById = async (req: AuthRequest, res: Response) => {
 
 export const searchArtistsByName = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const query = req.query.q as string
+        const searchQuery = req.query.q as string
 
-        if (!query || query.trim().length === 0) {
+        if (!searchQuery || searchQuery.trim().length === 0) {
             res.status(400).json({ message: "Search query is required" })
             return
         }
 
-        const artists = await Artist.find({
-            name: { $regex: query, $options: "i" },
-        })
-            .limit(20).select('-__v')
+        const limit = Math.min(parseInt(req.query.limit as string) || 20, 100)
+        const cursor = req.query.cursor as string | undefined
 
-        res.status(200).json(artists)
+        const filter: Record<string, any> = { name: { $regex: searchQuery, $options: "i" } }
+        if (cursor) filter._id = { $gt: cursor }
+
+        const artists = await Artist.find(filter)
+            .sort({ _id: 1 })
+            .limit(limit + 1)
+            .select('-__v')
+
+        const hasMore = artists.length > limit
+        if (hasMore) artists.pop()
+
+        const nextCursor = hasMore && artists.length > 0 ? artists[artists.length - 1]!._id.toString() : null
+
+        res.status(200).json({ data: artists, nextCursor, hasMore })
     } catch (error) {
         console.error("Search artists error:", error)
         res.status(500).json({ message: "Failed to search artists" })

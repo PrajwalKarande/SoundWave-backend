@@ -98,10 +98,23 @@ export const uploadSong = async (req: AuthRequest, res: Response): Promise<void>
 
 export const getAllSongs = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const songs = await Song.find()
-            .populate("artist", "name profileImage").select('-__v')
+        const limit = Math.min(parseInt(req.query.limit as string) || 20, 100)
+        const cursor = req.query.cursor as string | undefined
 
-        res.status(200).json(songs)
+        const query = cursor ? { _id: { $gt: cursor } } : {}
+
+        const songs = await Song.find(query)
+            .sort({ _id: 1 })
+            .limit(limit + 1)
+            .populate("artist", "name profileImage")
+            .select('-__v')
+
+        const hasMore = songs.length > limit
+        if (hasMore) songs.pop()
+
+        const nextCursor = hasMore && songs.length > 0 ? songs[songs.length - 1]!._id.toString() : null
+
+        res.status(200).json({ data: songs, nextCursor, hasMore })
     } catch (error) {
         console.error("Get songs error:", error)
         res.status(500).json({ message: "Failed to fetch songs" })
@@ -127,20 +140,31 @@ export const getSongById = async (req: AuthRequest, res: Response): Promise<void
 
 export const searchSongsByTitle = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const query = req.query.q as string
+        const searchQuery = req.query.q as string
 
-        if (!query || query.trim().length === 0) {
+        if (!searchQuery || searchQuery.trim().length === 0) {
             res.status(400).json({ message: "Search query is required" })
             return
         }
 
-        const songs = await Song.find({
-            title: { $regex: query, $options: "i" },
-        })
-            .populate("artist", "name profileImage")
-            .limit(20).select('-__v')
+        const limit = Math.min(parseInt(req.query.limit as string) || 20, 100)
+        const cursor = req.query.cursor as string | undefined
 
-        res.status(200).json(songs)
+        const filter: Record<string, any> = { title: { $regex: searchQuery, $options: "i" } }
+        if (cursor) filter._id = { $gt: cursor }
+
+        const songs = await Song.find(filter)
+            .sort({ _id: 1 })
+            .limit(limit + 1)
+            .populate("artist", "name profileImage")
+            .select('-__v')
+
+        const hasMore = songs.length > limit
+        if (hasMore) songs.pop()
+
+        const nextCursor = hasMore && songs.length > 0 ? songs[songs.length - 1]!._id.toString() : null
+
+        res.status(200).json({ data: songs, nextCursor, hasMore })
     } catch (error) {
         console.error("Search songs error:", error)
         res.status(500).json({ message: "Failed to search songs" })

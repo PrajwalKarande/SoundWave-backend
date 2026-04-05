@@ -29,3 +29,7 @@ export const artistCreateSchema = z.object({
     bio: z.string().min(1, "Bio is required"),
     profileImageURL: z.string("Profile image must be a valid URL"),
 })
+
+export const playlistCreateSchema = z.object({
+    name: z.string().min(1,"Name is required")
+})

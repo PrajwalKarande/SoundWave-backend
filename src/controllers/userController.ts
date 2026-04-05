@@ -5,8 +5,22 @@ import { User } from "../Models/User.js";
 
 export const getAllUsers = async(req:AuthRequest,res:Response):Promise<void>=>{
     try {
-        const users = await User.find().select('-__v')
-        res.status(200).json({ users })
+        const limit = Math.min(parseInt(req.query.limit as string) || 20, 100)
+        const cursor = req.query.cursor as string | undefined
+
+        const query = cursor ? { _id: { $gt: cursor } } : {}
+
+        const users = await User.find(query)
+            .sort({ _id: 1 })
+            .limit(limit + 1)
+            .select('-__v -password')
+
+        const hasMore = users.length > limit
+        if (hasMore) users.pop()
+
+        const nextCursor = hasMore && users.length > 0 ? users[users.length - 1]!._id.toString() : null
+
+        res.status(200).json({ data: users, nextCursor, hasMore })
     } catch (error) {
         res.status(500).json({ message: "Server error, please try after some time" })
     }
