@@ -10,17 +10,15 @@ export interface AuthRequest extends Request
 }
 
 export const authenticate = (req:AuthRequest,res:Response,next:NextFunction):void => {
-    const authHeader = req.headers.authorization
+    const jwtToken = req.cookies?.token
 
-    if(!authHeader || !authHeader.startsWith("Bearer ")){
+    if(!jwtToken){
         res.status(401).json({message:"Access denied, No token Provided"})
         return
     }
 
-    const jwtToken = authHeader.split(" ")[1]
-
     try{
-        const decodedToken = verifyToken(jwtToken!)
+        const decodedToken = verifyToken(jwtToken)
         req.user = decodedToken
         next()
     }catch(error){

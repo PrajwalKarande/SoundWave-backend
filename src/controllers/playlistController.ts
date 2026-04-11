@@ -1,15 +1,8 @@
 import type { AuthRequest } from "../middleware/auth.js";
 import type { Response } from "express";
 import { Playlist } from "../Models/Playlist.js";
-import { playlistCreateSchema } from "../validators/schemas.js";
 
 export const createPlaylist = async (req:AuthRequest,res:Response):Promise<void> => {
-
-    const validation = playlistCreateSchema.safeParse(req.body)
-    if(!validation.success){
-        res.status(400).json({ message: "Invalid playlist data", error: validation.error })
-        return
-    }
 
     try{
         if(!req.user?.id){
@@ -41,11 +34,38 @@ export const getUserPlaylists = async (req:AuthRequest,res:Response):Promise<voi
     }
     try{
         const playlists = await Playlist.find({ user: userId })
-        res.status(200).json(playlists)
+            .select("name songs")
+            .lean()
+        const result = playlists.map(({ _id, name, songs }) => ({
+            _id,
+            name,
+            songCount: songs.length
+        }))
+        res.status(200).json(result)
     }
     catch(error){
         console.error("Error getting user playlists:", error)
         res.status(500).json({ message: "Failed to get user playlists", error })
+    }
+}
+
+export const getPlaylistById = async (req:AuthRequest,res:Response):Promise<void> => {
+    try{
+        const playlist = await Playlist.findById(req.params.id)
+            .populate({
+                path: "songs",
+                select: "title url coverImage artist duration",
+                populate: { path: "artist", select: "name profileImage" }
+            })
+        if(!playlist){
+            res.status(404).json({ message: "Playlist not found" })
+            return
+        }
+        res.status(200).json(playlist)
+    }
+    catch(error){
+        console.error("Error getting playlist:", error)
+        res.status(500).json({ message: "Failed to get playlist", error })
     }
 }
 
@@ -95,7 +115,13 @@ export const addSongToPlaylist = async (req:AuthRequest,res:Response):Promise<vo
         }
         playlist.songs.push(songId)
         await playlist.save()
-        res.status(200).json({ message: "Song added to playlist successfully" })
+        const populated = await Playlist.findById(playlist._id)
+            .populate({
+                path: "songs",
+                select: "title url coverImage artist duration",
+                populate: { path: "artist", select: "name profileImage" }
+            })
+        res.status(200).json(populated)
 
     }
     catch(error){

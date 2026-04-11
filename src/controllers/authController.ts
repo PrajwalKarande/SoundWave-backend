@@ -4,6 +4,12 @@ import { User } from "../Models/User.js"
 import { generateToken } from "../Utils/jwt.js"
 import type { AuthRequest } from "../middleware/auth.js"
 
+const COOKIE_OPTIONS = {
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
+    sameSite: "lax" as const,
+}
+
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
     const { username, email, password } = req.body
 
@@ -24,9 +30,9 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
 
         const token = generateToken(user._id.toString(), user.role)
 
+        res.cookie("token", token, COOKIE_OPTIONS)
         res.status(201).json({
             message: "User created successfully",
-            token,
             user: {
                 username: user.username,
                 email: user.email,
@@ -57,9 +63,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
         const token = generateToken(user._id.toString(), user.role)
 
+        res.cookie("token", token, COOKIE_OPTIONS)
         res.status(200).json({
             message: "Login successful",
-            token,
             user: {
                 username: user.username,
                 email: user.email,
@@ -88,4 +94,9 @@ export const validateToken = async (req: AuthRequest, res: Response): Promise<vo
     } catch (error) {
         res.status(500).json({ message: "Server error, please try after some time" })
     }
+}
+
+export const logout = (_req: Request, res: Response): void => {
+    res.clearCookie("token", { httpOnly: true, sameSite: "lax" })
+    res.status(200).json({ message: "Logged out successfully" })
 }
