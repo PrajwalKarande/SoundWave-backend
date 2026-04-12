@@ -34,8 +34,8 @@ app.use("/api/users",userRoutes)
 app.use("/api/stats",statRoutes)
 app.use('/api/playlists',playlistRoutes)
 
-const port = process.env.PORT || 3000
+const port = Number(process.env.PORT) || 3000
 
-app.listen(port,()=>{
+app.listen(port,'0.0.0.0',()=>{
     console.log(`Server is running on port ${port}`)
 })
