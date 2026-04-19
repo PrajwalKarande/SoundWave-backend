@@ -2,6 +2,7 @@ import type { Response } from "express"
 import type { AuthRequest } from "../middleware/auth.js"
 import { Song } from "../Models/Song.js"
 import { Artist } from "../Models/Artist.js"
+import { RecentlyPlayed } from "../Models/RecentlyPlayed.js"
 import mongoose from "mongoose"
 import { uploadToR2, deleteFromR2 } from "../Utils/r2Upload.js"
 
@@ -85,6 +86,12 @@ export const uploadSong = async (req: AuthRequest, res: Response): Promise<void>
             genre: genreList,
             duration: Number(duration),
         })
+
+        // Push song reference into each artist's songs array
+        await Artist.updateMany(
+            { _id: { $in: artistList } },
+            { $addToSet: { songs: song._id } }
+        )
 
         res.status(201).json({
             message: "Song uploaded successfully",
@@ -183,6 +190,12 @@ export const deleteSong = async (req: AuthRequest, res: Response): Promise<void>
         // Delete audio from R2
         await deleteFromR2(song.r2Key)
 
+        // Remove song reference from all artists
+        await Artist.updateMany(
+            { _id: { $in: song.artist } },
+            { $pull: { songs: song._id } }
+        )
+
         // Delete from MongoDB
         await Song.findByIdAndDelete(req.params.id)
 
@@ -190,5 +203,65 @@ export const deleteSong = async (req: AuthRequest, res: Response): Promise<void>
     } catch (error) {
         console.error("Delete song error:", error)
         res.status(500).json({ message: "Failed to delete song" })
+    }
+}
+
+export const updateRecentlyPlayed = async (userId: string, songId: string): Promise<void> => {
+    const userOId = new mongoose.Types.ObjectId(userId)
+    const songOId = new mongoose.Types.ObjectId(songId)
+
+    // Step 1: Remove the song if it already exists (prevent duplicates).
+    // upsert:true creates the document for first-time users.
+    await RecentlyPlayed.findOneAndUpdate(
+        { userId: userOId },
+        { $pull: { songs: { songId: songOId } } },
+        { upsert: true }
+    )
+
+    // Step 2: Prepend to front with $position:0 and trim to 10 with $slice.
+    await RecentlyPlayed.updateOne(
+        { userId: userOId },
+        {
+            $push: {
+                songs: {
+                    $each: [{ songId: songOId, playedAt: new Date() }],
+                    $position: 0,
+                    $slice: 10,
+                },
+            },
+        }
+    )
+}
+
+export const markPlayed = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        await updateRecentlyPlayed(req.user!.id, req.params.id as string)
+        res.json({ success: true })
+    } catch (error) {
+        console.error("Mark played error:", error)
+        res.status(500).json({ message: "Failed to record play" })
+    }
+}
+
+export const getRecentlyPlayed = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const doc = await RecentlyPlayed.findOne({ userId: req.user!.id }).populate({
+            path: "songs.songId",
+            select: "title artist coverImage duration url",
+            populate: { path: "artist", select: "name profileImage" },
+        })
+
+        if (!doc) {
+            res.json({ songs: [] })
+            return
+        }
+
+        // Unwrap populated Song documents; filter nulls for deleted songs
+        const songs = doc.songs.map((entry) => entry.songId).filter(Boolean)
+
+        res.json({ songs })
+    } catch (error) {
+        console.error("Get recently played error:", error)
+        res.status(500).json({ message: "Failed to fetch recently played" })
     }
 }

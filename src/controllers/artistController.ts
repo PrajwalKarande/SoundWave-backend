@@ -52,7 +52,13 @@ export const getAllArtists = async (req: AuthRequest, res: Response) => {
 
 export const getArtistById = async (req: AuthRequest, res: Response) => {
     try {
-        const artist = await Artist.findById(req.params.id).select('-__v');
+        const artist = await Artist.findById(req.params.id)
+            .select('-__v')
+            .populate({
+                path: 'songs',
+                select: 'title artist coverImage duration url',
+                populate: { path: 'artist', select: 'name' }
+            });
         if (!artist) {
             res.status(404).json({ message: "Artist not found" });
             return;
