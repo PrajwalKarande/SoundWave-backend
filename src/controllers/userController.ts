@@ -1,6 +1,7 @@
 import type { Response } from "express";
 import type { AuthRequest } from "../middleware/auth.js";
 import { User } from "../Models/User.js";
+import { deleteUserPlaylist } from "./playlistController.js";
 
 
 export const getAllUsers = async(req:AuthRequest,res:Response):Promise<void>=>{
@@ -29,6 +30,7 @@ export const getAllUsers = async(req:AuthRequest,res:Response):Promise<void>=>{
 export const deleteUser = async(req:AuthRequest,res:Response):Promise<void>=>{
     try {
         const id = req.params.id as string
+        await deleteUserPlaylist(id)
         const user = await User.findByIdAndDelete(id)
         if(!user){
             res.status(404).json({ message: "User not found" })

@@ -105,6 +105,15 @@ export const deletePlaylist = async (req:AuthRequest,res:Response):Promise<void>
     }
 }
 
+export const deleteUserPlaylist = async (userId:string):Promise<void> => {
+    try{
+        await Playlist.deleteMany({user:userId})
+    }
+    catch(error){
+        console.error("Error deleting user playlist:", error)
+    }
+}
+
 export const addSongToPlaylist = async (req:AuthRequest,res:Response):Promise<void> => {
     try{
         const { songId } = req.body
