@@ -30,6 +30,22 @@ export const artistCreateSchema = z.object({
     profileImageURL: z.string("Profile image must be a valid URL"),
 })
 
+export const artistUpdateSchema = artistCreateSchema.partial()
+
+export const songUpdateSchema = z.object({
+    title: z.string().min(1, "Title must not be empty").optional(),
+    coverImage: z.string().optional(),
+    genre: z.union([
+        z.string().min(1),
+        z.array(z.string().min(1)).min(1),
+    ]).optional(),
+    artist: z.union([
+        z.string().min(1),
+        z.array(z.string().min(1)).min(1),
+    ]).optional(),
+    duration: z.coerce.number().positive("Duration must be positive").optional(),
+})
+
 export const playlistCreateSchema = z.object({
     name: z.string().min(1,"Name is required")
 })

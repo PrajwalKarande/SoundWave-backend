@@ -206,6 +206,58 @@ export const deleteSong = async (req: AuthRequest, res: Response): Promise<void>
     }
 }
 
+export const updateSong = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { title, coverImage, genre, artist, duration } = req.body
+
+        const parseArray = (data: any): string[] => {
+            if (Array.isArray(data)) return data
+            if (typeof data === "string") {
+                try {
+                    const parsed = JSON.parse(data)
+                    if (Array.isArray(parsed)) return parsed.map(String)
+                } catch {
+                    return data.split(",").map((s: string) => s.trim()).filter(Boolean)
+                }
+            }
+            return [String(data)]
+        }
+
+        const updates: Record<string, any> = {}
+        if (title) updates.title = title
+        if (coverImage !== undefined) updates.coverImage = coverImage
+        if (duration) updates.duration = Number(duration)
+        if (genre) updates.genre = parseArray(genre)
+
+        if (artist) {
+            const artistNames = parseArray(artist)
+            const artistList = await Promise.all(
+                artistNames.map(async (name) => {
+                    if (mongoose.Types.ObjectId.isValid(name)) return name
+                    const artistDoc = await Artist.findOne({ name: new RegExp(`^${name}$`, "i") })
+                    if (!artistDoc) throw new Error(`Artist '${name}' not found`)
+                    return artistDoc._id
+                })
+            )
+            updates.artist = artistList
+        }
+
+        const song = await Song.findByIdAndUpdate(req.params.id, updates, { new: true })
+            .populate("artist", "name profileImage")
+            .select("-__v")
+
+        if (!song) {
+            res.status(404).json({ message: "Song not found" })
+            return
+        }
+
+        res.status(200).json({ message: "Song updated successfully", song })
+    } catch (error: any) {
+        console.error("Update song error:", error)
+        res.status(error.message?.includes("not found") ? 404 : 500).json({ message: error.message || "Failed to update song" })
+    }
+}
+
 export const updateRecentlyPlayed = async (userId: string, songId: string): Promise<void> => {
     const userOId = new mongoose.Types.ObjectId(userId)
     const songOId = new mongoose.Types.ObjectId(songId)
@@ -235,7 +287,13 @@ export const updateRecentlyPlayed = async (userId: string, songId: string): Prom
 
 export const markPlayed = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        await updateRecentlyPlayed(req.user!.id, req.params.id as string)
+        await Promise.all([
+            updateRecentlyPlayed(req.user!.id, req.params.id as string),
+            Song.findByIdAndUpdate(req.params.id, {
+                $inc: { playCount: 1 },
+                $set: { lastPlayedAt: new Date() },
+            }),
+        ])
         res.json({ success: true })
     } catch (error) {
         console.error("Mark played error:", error)

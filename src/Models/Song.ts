@@ -8,6 +8,8 @@ export interface ISong{
     artist:Types.ObjectId[]
     genre:string[]
     duration?:number
+    playCount:number
+    lastPlayedAt?:Date
     createdAt:Date
 }
 
@@ -20,11 +22,14 @@ export const songSchema = new Schema<ISong>({
     artist:{type:[{type:Types.ObjectId,ref:"Artist"}],required:true},
     genre:{type:[{type:String}],required:true},
     duration:{type:Number},
+    playCount:{type:Number,default:0},
+    lastPlayedAt:{type:Date},
     createdAt:{type:Date,default:Date.now,select:false}
 })
 
 // Indexes for fast read operations
 songSchema.index({ title: "text" })       // text search on title
 songSchema.index({ genre: 1 })            // filter by genre
+songSchema.index({ playCount: -1, lastPlayedAt: -1 })  // trending queries
 
 export const Song = model<ISong>("Song",songSchema)
