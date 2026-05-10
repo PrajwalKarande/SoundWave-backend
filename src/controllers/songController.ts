@@ -3,6 +3,7 @@ import type { AuthRequest } from "../middleware/auth.js"
 import { Song } from "../Models/Song.js"
 import { Artist } from "../Models/Artist.js"
 import { RecentlyPlayed } from "../Models/RecentlyPlayed.js"
+import { SearchHistory } from "../Models/SearchHistory.js"
 import mongoose from "mongoose"
 import { uploadToR2, deleteFromR2 } from "../Utils/r2Upload.js"
 
@@ -143,6 +144,30 @@ export const getSongById = async (req: AuthRequest, res: Response): Promise<void
         console.error("Get song error:", error)
         res.status(500).json({ message: "Failed to fetch song" })
     }
+}
+
+async function persistSearchSong(userId: string, songId: string): Promise<void> {
+    const userOId = new mongoose.Types.ObjectId(userId)
+    const songOId = new mongoose.Types.ObjectId(songId)
+
+    await SearchHistory.findOneAndUpdate(
+        { userId: userOId },
+        { $pull: { songs: { songId: songOId } } },
+        { upsert: true }
+    )
+
+    await SearchHistory.updateOne(
+        { userId: userOId },
+        {
+            $push: {
+                songs: {
+                    $each: [{ songId: songOId, searchedAt: new Date() }],
+                    $position: 0,
+                    $slice: 20,
+                },
+            },
+        }
+    )
 }
 
 export const searchSongsByTitle = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -321,5 +346,63 @@ export const getRecentlyPlayed = async (req: AuthRequest, res: Response): Promis
     } catch (error) {
         console.error("Get recently played error:", error)
         res.status(500).json({ message: "Failed to fetch recently played" })
+    }
+}
+
+export const addSongToSearchHistory = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        await persistSearchSong(req.user!.id, req.params.id)
+        res.json({ success: true })
+    } catch (error) {
+        console.error("Add search history error:", error)
+        res.status(500).json({ message: "Failed to save search history" })
+    }
+}
+
+export const getSearchHistory = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const doc = await SearchHistory.findOne({ userId: req.user!.id }).populate({
+            path: "songs.songId",
+            select: "title artist coverImage duration",
+            populate: { path: "artist", select: "name" },
+        })
+
+        if (!doc) {
+            res.json({ songs: [] })
+            return
+        }
+
+        const songs = doc.songs.map((entry) => entry.songId).filter(Boolean)
+        res.json({ songs })
+    } catch (error) {
+        console.error("Get search history error:", error)
+        res.status(500).json({ message: "Failed to fetch search history" })
+    }
+}
+
+export const clearSearchHistory = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        await SearchHistory.findOneAndUpdate(
+            { userId: req.user!.id },
+            { $set: { songs: [] } }
+        )
+        res.json({ message: "Search history cleared" })
+    } catch (error) {
+        console.error("Clear search history error:", error)
+        res.status(500).json({ message: "Failed to clear search history" })
+    }
+}
+
+export const removeSearchHistoryItem = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const songOId = new mongoose.Types.ObjectId(req.params.id)
+        await SearchHistory.findOneAndUpdate(
+            { userId: req.user!.id },
+            { $pull: { songs: { songId: songOId } } }
+        )
+        res.json({ message: "Item removed from search history" })
+    } catch (error) {
+        console.error("Remove search history item error:", error)
+        res.status(500).json({ message: "Failed to remove item" })
     }
 }
