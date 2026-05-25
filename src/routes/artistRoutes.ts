@@ -6,12 +6,13 @@ import { createArtist, getAllArtists, getArtistById, searchArtistsByName, update
 
 const router = Router();
 
+router.use()
 // Public routes
 router.get("/", getAllArtists);
 router.get("/search", searchArtistsByName);
 router.get("/:id", getArtistById);
 
-// Admin-only routes
+// Admin-only routes ->  route level middleware 
 router.post("/create", authenticate, authorizeAdmin, validate(artistCreateSchema), createArtist);
 router.put("/update/:id", authenticate, authorizeAdmin, validate(artistUpdateSchema), updateArtist);
 router.delete("/delete/:id", authenticate, authorizeAdmin, deleteArtist);

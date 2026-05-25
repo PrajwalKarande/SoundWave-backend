@@ -108,8 +108,13 @@ export const getAllSongs = async (req: AuthRequest, res: Response): Promise<void
     try {
         const limit = Math.min(parseInt(req.query.limit as string) || 20, 100)
         const cursor = req.query.cursor as string | undefined
+        const genresParam = req.query.genres as string | undefined
 
-        const query = cursor ? { _id: { $gt: cursor } } : {}
+        const query: Record<string, any> = cursor ? { _id: { $gt: cursor } } : {}
+        if (genresParam) {
+            const genreList = genresParam.split(',').map(g => g.trim()).filter(Boolean)
+            if (genreList.length > 0) query.genre = { $in: genreList }
+        }
 
         const songs = await Song.find(query)
             .sort({ _id: 1 })
