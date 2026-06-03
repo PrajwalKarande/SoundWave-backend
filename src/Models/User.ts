@@ -15,8 +15,8 @@ export const userSchema = new Schema<IUser>({
     email:{type:String,required:true,unique:true},
     password:{type:String,required:true},
     role:{type:String,enum:["user","admin"],default:"user"},
-    playlists:{type:[{type:Types.ObjectId,ref:"Playlist"}],default:[]},
-    likedSongs:{type:[{type:Types.ObjectId,ref:"Song"}],default:[]},
+    playlists:{type:[{type:Schema.Types.ObjectId,ref:"Playlist"}],default:[]},
+    likedSongs:{type:[{type:Schema.Types.ObjectId,ref:"Song"}],default:[]},
     createdAt:{type:Date,default:Date.now,select:false}
 })
 

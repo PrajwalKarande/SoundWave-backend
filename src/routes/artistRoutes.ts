@@ -6,7 +6,6 @@ import { createArtist, getAllArtists, getArtistById, searchArtistsByName, update
 
 const router = Router();
 
-router.use()
 // Public routes
 router.get("/", getAllArtists);
 router.get("/search", searchArtistsByName);

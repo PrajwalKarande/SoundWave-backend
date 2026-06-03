@@ -10,8 +10,8 @@ export interface IPlaylist{
 
 export const playlistSchema = new Schema<IPlaylist>({
     name:{type:String,required:true},
-    songs:{type:[{type:Types.ObjectId,ref:"Song"}],default:[]},
-    user:{type:Types.ObjectId,ref:"User",required:true},
+    songs:{type:[{type:Schema.Types.ObjectId,ref:"Song"}],default:[]},
+    user:{type:Schema.Types.ObjectId,ref:"User",required:true},
     createdAt:{type:Date,default:Date.now,select:false}
 })
 

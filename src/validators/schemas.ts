@@ -49,3 +49,7 @@ export const songUpdateSchema = z.object({
 export const playlistCreateSchema = z.object({
     name: z.string().min(1,"Name is required")
 })
+
+export const likeSongSchema = z.object({
+    songId: z.string().min(1, "Song ID is required")
+})

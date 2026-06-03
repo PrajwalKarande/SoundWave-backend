@@ -11,6 +11,7 @@ import artistRoutes from "./routes/artistRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import statRoutes from "./routes/statRoutes.js";
 import playlistRoutes from "./routes/playlistRoutes.js"
+import likedSongRoutes from "./routes/likedSongRoutes.js"
 
 connectDB()
 
@@ -33,6 +34,7 @@ app.use("/api/artists",artistRoutes)
 app.use("/api/users",userRoutes)
 app.use("/api/stats",statRoutes)
 app.use('/api/playlists',playlistRoutes)
+app.use('/api/liked',likedSongRoutes)
 
 const port = Number(process.env.PORT) || 3000
 

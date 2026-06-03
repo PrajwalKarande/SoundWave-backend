@@ -19,7 +19,7 @@ export const songSchema = new Schema<ISong>({
     url:{type:String,required:true},
     r2Key:{type:String,required:true,select:false},
     coverImage:{type:String,default:""},
-    artist:{type:[{type:Types.ObjectId,ref:"Artist"}],required:true},
+    artist:{type:[{type:Schema.Types.ObjectId,ref:"Artist"}],required:true},
     genre:{type:[{type:String}],required:true},
     duration:{type:Number},
     playCount:{type:Number,default:0},

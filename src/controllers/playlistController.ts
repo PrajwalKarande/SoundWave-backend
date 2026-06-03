@@ -72,15 +72,19 @@ export const getPlaylistById = async (req:AuthRequest,res:Response):Promise<void
 export const updatePlaylist = async (req:AuthRequest,res:Response):Promise<void> => {
     try{
         const { name } = req.body
-        
-        const playlist = await Playlist.findByIdAndUpdate(req.params.id,{
-            name
-        })
+
+        const playlist = await Playlist.findById(req.params.id)
         if(!playlist){
             res.status(404).json({ message: "Playlist not found" })
             return
         }
-        res.status(200).json(playlist)
+        if(playlist.user.toString() !== req.user?.id){
+            res.status(403).json({ message: "Not authorized to edit this playlist" })
+            return
+        }
+        playlist.name = name
+        await playlist.save()
+        res.status(200).json({ _id: playlist._id, name: playlist.name })
 
     }
     catch(error){
