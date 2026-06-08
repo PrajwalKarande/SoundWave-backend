@@ -4,10 +4,13 @@ import { User } from "../Models/User.js"
 import { generateToken } from "../Utils/jwt.js"
 import type { AuthRequest } from "../middleware/auth.js"
 
+const isProd = process.env.NODE_ENV === "production"
+
 const COOKIE_OPTIONS = {
     httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
-    sameSite: "lax" as const,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    sameSite: (isProd ? "none" : "lax") as "none" | "lax",
+    secure: isProd,
 }
 
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
@@ -97,6 +100,6 @@ export const validateToken = async (req: AuthRequest, res: Response): Promise<vo
 }
 
 export const logout = (_req: Request, res: Response): void => {
-    res.clearCookie("token", { httpOnly: true, sameSite: "lax" })
+    res.clearCookie("token", { httpOnly: true, sameSite: isProd ? "none" : "lax", secure: isProd })
     res.status(200).json({ message: "Logged out successfully" })
 }
