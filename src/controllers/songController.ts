@@ -356,7 +356,7 @@ export const getRecentlyPlayed = async (req: AuthRequest, res: Response): Promis
 
 export const addSongToSearchHistory = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        await persistSearchSong(req.user!.id, req.params.id)
+        await persistSearchSong(req.user!.id, req.params.id as string)
         res.json({ success: true })
     } catch (error) {
         console.error("Add search history error:", error)
@@ -400,7 +400,7 @@ export const clearSearchHistory = async (req: AuthRequest, res: Response): Promi
 
 export const removeSearchHistoryItem = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const songOId = new mongoose.Types.ObjectId(req.params.id)
+        const songOId = new mongoose.Types.ObjectId(req.params.id as string)
         await SearchHistory.findOneAndUpdate(
             { userId: req.user!.id },
             { $pull: { songs: { songId: songOId } } }
