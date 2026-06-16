@@ -24,5 +24,6 @@ export const playbackLimiter = rateLimit({
     standardHeaders: "draft-7",
     legacyHeaders: false,
     keyGenerator: (req: Request) => (req as AuthRequest).user?.id || req.ip?.replace(/^.*:/, '') || "unknown",
+    validate: { keyGeneratorIpFallback: false },
     message: { message: "Playback limit reached, please try again later." },
 })
