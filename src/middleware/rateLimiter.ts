@@ -1,4 +1,4 @@
-import rateLimit from "express-rate-limit"
+import rateLimit, { ipKeyGenerator } from "express-rate-limit"
 import type { Request } from "express"
 import type { AuthRequest } from "./auth.js"
 
@@ -23,6 +23,6 @@ export const playbackLimiter = rateLimit({
     limit: 50,
     standardHeaders: "draft-7",
     legacyHeaders: false,
-    keyGenerator: (req: Request) => (req as AuthRequest).user?.id || req.ip || "unknown",
+    keyGenerator: (req: Request) => (req as AuthRequest).user?.id || ipKeyGenerator(req),
     message: { message: "Playback limit reached, please try again later." },
 })
