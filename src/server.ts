@@ -12,6 +12,7 @@ import userRoutes from "./routes/userRoutes.js";
 import statRoutes from "./routes/statRoutes.js";
 import playlistRoutes from "./routes/playlistRoutes.js"
 import likedSongRoutes from "./routes/likedSongRoutes.js"
+import { globalLimiter } from "./middleware/rateLimiter.js"
 
 connectDB()
 
@@ -26,6 +27,7 @@ app.use(cors({
 
 app.use(cookieParser())
 app.use(express.json())
+app.use(globalLimiter)
 
 //Routes
 app.use("/api/auth",authRoutes)
@@ -37,10 +39,6 @@ app.use('/api/playlists',playlistRoutes)
 app.use('/api/liked',likedSongRoutes)
 
 const port = Number(process.env.PORT) || 3000
-
-// app.listen(port,'0.0.0.0',()=>{
-//     console.log(`Server is running on port ${port}`)
-// })
 
 app.listen(port,()=>{
     console.log(`Server is running on port ${port}`)
