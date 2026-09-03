@@ -210,7 +210,7 @@ export const searchSongsByTitle = async (req: AuthRequest, res: Response): Promi
 
 export const deleteSong = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const song = await Song.findById(req.params.id)
+        const song = await Song.findByIdAndDelete(req.params.id).select('+r2Key')
 
         if (!song) {
             res.status(404).json({ message: "Song not found" })
@@ -225,9 +225,6 @@ export const deleteSong = async (req: AuthRequest, res: Response): Promise<void>
             { _id: { $in: song.artist } },
             { $pull: { songs: song._id } }
         )
-
-        // Delete from MongoDB
-        await Song.findByIdAndDelete(req.params.id)
 
         res.status(200).json({ message: "Song deleted successfully" })
     } catch (error) {
